@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Главная - Заметки</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="home-body" style="overflow-y: auto !important;">
+    <!-- Экран входа -->
+    <div id="login-screen" class="login-screen">
+        <div class="login-container glass-card">
+            <h1 class="login-title">Привет! 👋</h1>
+            <div id="init-form" class="login-form" style="display: none;">
+                <p class="login-subtitle">Создайте пароль для первого входа</p>
+                <input type="password" id="init-password" placeholder="Введите пароль" autocomplete="off" class="glass-input">
+                <input type="password" id="init-password-confirm" placeholder="Подтвердите пароль" autocomplete="off" class="glass-input">
+                <button id="init-btn" class="btn-glow">Инициализировать</button>
+            </div>
+            <div id="login-form" class="login-form">
+                <p class="login-subtitle">Введите пароль для входа</p>
+                <input type="password" id="login-password" placeholder="Введите пароль" autocomplete="off" class="glass-input">
+                <button id="login-btn" class="btn-glow">Войти</button>
+            </div>
+            <div id="login-error" class="error-message"></div>
+        </div>
+    </div>
+
+    <!-- Главная страница -->
+    <div id="home-app" class="home-app" style="display: none;">
+        <!-- Красивый header -->
+        <header class="home-header-gradient">
+            <div class="home-header-content">
+                <div class="home-header-left">
+                    <button id="home-back-btn" class="btn-glass" title="Заметки">
+                        <span>← Заметки</span>
+                    </button>
+                </div>
+                <div class="home-header-center">
+                    <h1 class="home-greeting" id="home-greeting-text">Добрый день!</h1>
+                    <p class="home-subtext" id="home-notes-count">0 заметок</p>
+                </div>
+                <div class="home-header-right">
+                    <button id="home-logout-btn" class="btn-glass" title="Выход">
+                        🚪 Выход
+                    </button>
+                </div>
+            </div>
+            <!-- Поиск -->
+            <div class="home-search-wrapper">
+                <input type="text" id="home-search-input" placeholder="🔍 Поиск по заметкам..." autocomplete="off" class="home-search-input-glass">
+                <div id="home-search-results" class="home-search-results glass-card"></div>
+            </div>
+        </header>
+
+        <!-- Основной контент - прокручиваемый -->
+        <main class="home-main-scroll">
+            <!-- Верхняя секция: инфо-карточки и граф -->
+            <div class="home-top-section">
+                <!-- Левая колонка - инфо -->
+                <aside class="home-info-col">
+                    <div class="sidebar-card glass-card">
+                        <h3 class="sidebar-title">📊 Статистика</h3>
+                        <div class="stat-grid">
+                            <div class="stat-item">
+                                <span class="stat-number" id="stats-notes-count">0</span>
+                                <span class="stat-label">заметок</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-number" id="stats-tags-count">0</span>
+                                <span class="stat-label">тегов</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="sidebar-card glass-card">
+                        <h3 class="sidebar-title">📝 Последние</h3>
+                        <div class="recent-list" id="home-recent-notes">
+                            <div class="empty-state">Нет заметок</div>
+                        </div>
+                    </div>
+                    
+                    <div class="sidebar-card glass-card">
+                        <h3 class="sidebar-title">🕐 История</h3>
+                        <div class="history-list" id="home-access-history">
+                            <div class="empty-state">Нет истории</div>
+                        </div>
+                    </div>
+                </aside>
+
+                <!-- Правая колонка - Граф -->
+                <section class="home-graph-col">
+                    <div class="graph-card glass-card">
+                        <div class="graph-header">
+                            <h2 class="graph-title">🕸️ Граф заметок</h2>
+                            <div class="graph-controls">
+                                <button id="graph-filter-all" class="graph-btn active" data-filter="all">Все</button>
+                                <button id="graph-filter-linked" class="graph-btn" data-filter="linked">Связанные</button>
+                                <button id="graph-expand-btn" class="graph-btn-icon" title="На весь экран">⛶</button>
+                            </div>
+                        </div>
+                        <div class="graph-canvas-wrapper">
+                            <canvas id="graph-canvas"></canvas>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Нижняя секция: Календарь -->
+            <section class="home-calendar-section">
+                <div class="calendar-card-full glass-card">
+                    <h3 class="sidebar-title">📅 Календарь</h3>
+                    <div id="calendar-container"></div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Popup календаря создается в JS -->
+
+    <!-- Toast уведомления -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <script src="{{ url_for('static', filename='js/graph-view.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/search-highlight.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/calendar.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/home.js') }}"></script>
+</body>
+</html>

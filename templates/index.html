@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Привет</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+</head>
+<body>
+    <!-- Экран входа -->
+    <div id="login-screen" class="login-screen">
+        <div class="login-container">
+            <h1>Привет! Надеюсь ты Юра.</h1>
+            <div id="init-form" class="login-form" style="display: none;">
+                <p class="login-subtitle">Создайте пароль для первого входа</p>
+                <input type="password" id="init-password" placeholder="Введите пароль" autocomplete="off">
+                <input type="password" id="init-password-confirm" placeholder="Подтвердите пароль" autocomplete="off">
+                <button id="init-btn" class="btn-primary">Инициализировать</button>
+            </div>
+            <div id="login-form" class="login-form">
+                <p class="login-subtitle">Введите пароль для входа</p>
+                <input type="password" id="login-password" placeholder="Введите пароль" autocomplete="off">
+                <button id="login-btn" class="btn-primary">Войти</button>
+            </div>
+            <div id="login-error" class="error-message"></div>
+        </div>
+    </div>
+
+    <!-- Основное приложение -->
+    <div id="app" class="app-container" style="display: none;">
+        <!-- Боковая панель -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>📝 Заметки</h2>
+                <div style="display: flex; gap: 0.5rem;">
+                    <button id="home-btn" class="btn-icon" title="Главная (Граф)">🕸️</button>
+                    <button id="random-note-btn" class="btn-icon" title="Случайная заметка">🎲</button>
+                    <button id="new-note-btn" class="btn-icon" title="Создать заметку">➕</button>
+                </div>
+            </div>
+            
+            <div class="stats-panel" id="stats-panel">
+                <div class="stat-item">
+                    <span class="stat-value" id="notes-count">0</span>
+                    <span class="stat-label">Заметок</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value" id="words-count">0</span>
+                    <span class="stat-label" id="words-count-label">Слов</span>
+                </div>
+            </div>
+            
+            <div class="search-container">
+                <input type="text" id="search-input" placeholder="🔍 Поиск..." autocomplete="off">
+            </div>
+            
+            <div class="tags-container" id="tags-container" style="display: none;">
+                <div class="tags-header">
+                    <span>🏷️ Теги:</span>
+                    <button id="clear-tags-filter" class="btn-small">✕</button>
+                </div>
+                <div id="tags-list" class="tags-list"></div>
+            </div>
+            
+            <div class="notes-list" id="notes-list">
+                <!-- Список заметок будет здесь -->
+            </div>
+        </aside>
+
+        <!-- Основная область -->
+        <main class="main-content">
+            <!-- Панель инструментов -->
+            <div class="toolbar">
+                <div class="toolbar-left">
+                    <button id="bold-btn" class="toolbar-btn" title="Жирный текст">B</button>
+                    <button id="italic-btn" class="toolbar-btn" title="Курсив">I</button>
+                    <button id="code-btn" class="toolbar-btn" title="Код">&lt;/&gt;</button>
+                    <button id="quote-btn" class="toolbar-btn" title="Цитата">"</button>
+                    <div class="toolbar-separator"></div>
+                    <button id="h1-btn" class="toolbar-btn" title="Заголовок 1">H1</button>
+                    <button id="h2-btn" class="toolbar-btn" title="Заголовок 2">H2</button>
+                    <button id="h3-btn" class="toolbar-btn" title="Заголовок 3">H3</button>
+                    <div class="toolbar-separator"></div>
+                    <button id="insert-phrase-btn" class="toolbar-btn" title="Вставить фразу из словаря">📚</button>
+                    <div class="toolbar-separator"></div>
+                    <button id="note-links-btn" class="toolbar-btn" title="Связанные заметки">🔗</button>
+                </div>
+                <div class="toolbar-right">
+                    <button id="save-now-btn" class="toolbar-btn" title="Сохранить сейчас"><span class="toolbar-icon">💾</span><span class="toolbar-text">Сохранить</span></button>
+                    <button id="duplicate-note-btn" class="toolbar-btn" title="Копировать заметку"><span class="toolbar-icon">📋</span><span class="toolbar-text">Копировать</span></button>
+                    <button id="export-btn" class="toolbar-btn" title="Экспорт заметки"><span class="toolbar-icon">📤</span><span class="toolbar-text">Экспорт</span></button>
+                    <div class="toolbar-separator"></div>
+                    <button id="search-focus-btn" class="toolbar-btn" title="Поиск"><span class="toolbar-icon">🔍</span><span class="toolbar-text">Поиск</span></button>
+                    <button id="dictionary-btn" class="btn-secondary" title="Управление словарем"><span class="toolbar-icon">📖</span><span class="toolbar-text">Словарь</span></button>
+                    <span id="save-status" class="save-status">Сохранено</span>
+                    <button id="settings-btn" class="btn-secondary toolbar-btn-icon" title="Настройки">⚙️</button>
+                    <button id="logout-btn" class="btn-secondary" title="Выход"><span class="toolbar-icon">🚪</span><span class="toolbar-text">Выход</span></button>
+                </div>
+            </div>
+
+            <!-- Редактор -->
+            <div class="editor-container">
+                <div class="editor-wrapper">
+                    <div class="note-header">
+                        <input type="text" id="note-title" placeholder="Название заметки..." class="note-title-input">
+                        <div class="note-header-meta">
+                            <div class="note-tags-input-container">
+                                <input type="text" id="note-tags-input" placeholder="🏷️ Теги (через запятую)..." class="note-tags-input" autocomplete="off">
+                                <div id="note-tags-display" class="note-tags-display"></div>
+                            </div>
+                            <div class="note-date-link-container">
+                                <button id="note-date-link-btn" class="note-date-link-btn" title="Привязать к дате">📅</button>
+                                <span id="note-linked-date" class="note-linked-date" style="display: none;"></span>
+                                <button id="note-date-unlink-btn" class="note-date-unlink-btn" title="Отвязать от даты" style="display: none;">✕</button>
+                                <div id="note-date-picker-container" class="note-date-picker-container" style="display: none;">
+                                    <input type="date" id="note-date-picker" class="note-date-picker">
+                                    <button id="note-date-confirm-btn" class="note-date-confirm-btn" title="Подтвердить">✓</button>
+                                    <button id="note-date-cancel-btn" class="note-date-cancel-btn" title="Отмена">✕</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="note-links-panel" id="note-links-panel" style="display: none;">
+                        <div id="note-links-display" class="note-links-display"></div>
+                        <div id="note-links-selector" class="note-links-selector" style="display: none;">
+                            <input type="text" id="note-links-search" placeholder="🔍 Поиск заметок..." class="note-links-search" autocomplete="off">
+                            <div id="note-links-list" class="note-links-list"></div>
+                        </div>
+                    </div>
+                    <div class="editor-tabs" id="editor-tabs">
+                        <button class="tab-btn active" data-tab="edit">✏️ Редактировать</button>
+                        <button class="tab-btn" data-tab="preview">👁️ Просмотр</button>
+                    </div>
+                    <!-- Text editor -->
+                    <div id="text-editor-container">
+                        <textarea id="note-editor" placeholder="Начните писать заметку...&#10;&#10;Поддерживается Markdown:&#10;- **жирный текст**&#10;- *курсив*&#10;- `код`&#10;- > цитаты&#10;- # заголовки"></textarea>
+                        <div id="note-preview" class="note-preview"></div>
+                    </div>
+                    <!-- Canvas editor -->
+                    <div id="canvas-editor-container" style="display: none; flex: 1; position: relative; overflow: hidden; background: #1e1e1e;">
+                        <div id="canvas-toolbar" style="position: absolute; top: 0; left: 0; right: 0; background: var(--bg-secondary); border-bottom: 1px solid var(--border); padding: 0.35rem 0.5rem; z-index: 10; display: flex; gap: 0.25rem; flex-wrap: nowrap; overflow-x: auto; align-items: center;">
+                            <button class="canvas-tool-btn active" data-tool="select" title="Выбор">👆</button>
+                            <button class="canvas-tool-btn" data-tool="pan" title="Перемещение пространства">✋</button>
+                            <button class="canvas-tool-btn" data-tool="pencil" title="Карандаш">✏️</button>
+                            <button class="canvas-tool-btn" data-tool="node" title="Создать блок">⬜</button>
+                            <button class="canvas-tool-btn" data-tool="zone" title="Зона (задний план)">🔲</button>
+                            <button class="canvas-tool-btn" data-tool="sticker" title="Стикер">📌</button>
+                            <button class="canvas-tool-btn" data-tool="frame" title="Рамка">🖼️</button>
+                            <button class="canvas-tool-btn" data-tool="line" title="Линия">─</button>
+                            <button class="canvas-tool-btn" data-tool="arrow" title="Стрелка">→</button>
+                            <button class="canvas-tool-btn" data-tool="curved-arrow" title="Изогнутая стрелка">↪</button>
+                            <button class="canvas-tool-btn" data-tool="text" title="Текст">📝</button>
+                            <div style="width: 1px; height: 20px; background: var(--border); margin: 0 0.15rem; flex-shrink: 0;"></div>
+                            <!-- Палитра цветов -->
+                            <div class="canvas-palette-container" style="position: relative;">
+                                <button class="canvas-tool-btn" id="canvas-palette-btn" title="Палитра цветов">🎨</button>
+                                <div id="canvas-palette-dropdown" class="canvas-palette-dropdown" style="display: none;">
+                                    <div id="canvas-palette-colors" class="canvas-palette-colors"></div>
+                                    <div class="canvas-palette-actions">
+                                        <input type="color" id="canvas-palette-add-color" value="#5865f2" title="Добавить цвет">
+                                        <button id="canvas-palette-add-btn" class="canvas-palette-add-btn" title="Добавить в палитру">+</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <input type="color" id="canvas-color" value="#5865f2" title="Цвет линии" style="width: 28px; height: 28px; padding: 0; border: 1px solid var(--border); border-radius: 4px; cursor: pointer; flex-shrink: 0;">
+                            <input type="color" id="canvas-fill-color" value="#252525" title="Цвет заливки" style="width: 28px; height: 28px; padding: 0; border: 1px solid var(--border); border-radius: 4px; cursor: pointer; flex-shrink: 0;">
+                            <select id="canvas-line-style" title="Стиль линии" style="padding: 0.15rem 0.25rem; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 4px; color: var(--text-primary); font-size: 0.75rem; height: 28px; flex-shrink: 0;">
+                                <option value="solid">─ Сплошная</option>
+                                <option value="dashed">┄ Пунктир</option>
+                                <option value="dotted">┈ Точки</option>
+                                <option value="dashdot">┼ Штрих-пунктир</option>
+                                <option value="wave">〰️ Волна</option>
+                            </select>
+                            <select id="canvas-arrow-style" title="Стиль стрелки" style="padding: 0.15rem 0.25rem; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 4px; color: var(--text-primary); font-size: 0.75rem; height: 28px; flex-shrink: 0;">
+                                <option value="normal">→ Обычн</option>
+                                <option value="double">⇉ Двойн</option>
+                                <option value="open">⇀ Откр</option>
+                                <option value="closed">▶ Закр</option>
+                                <option value="diamond">⟐ Ромб</option>
+                            </select>
+                            <select id="canvas-node-shape" title="Форма блока" style="padding: 0.15rem 0.25rem; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 4px; color: var(--text-primary); font-size: 0.75rem; height: 28px; flex-shrink: 0;">
+                                <option value="rectangle">▭ Прямоуг</option>
+                                <option value="circle">○ Круг</option>
+                                <option value="ellipse">◯ Овал</option>
+                                <option value="triangle">△ Треуг</option>
+                                <option value="diamond">◇ Ромб</option>
+                                <option value="star">★ Звезда</option>
+                                <option value="hexagon">⬡ 6-уголь</option>
+                            </select>
+                            <input type="file" id="canvas-image-upload" accept="image/*" style="display: none;">
+                            <button class="canvas-tool-btn" id="canvas-upload-btn" title="Загрузить изображение">🖼️</button>
+                            <button class="canvas-tool-btn" id="canvas-todo-btn" title="Добавить TODO к блоку" style="display: none;">☑️</button>
+                            <button class="canvas-tool-btn" id="canvas-delete-btn" title="Удалить выбранное">🗑️</button>
+                        </div>
+                        <div id="canvas-editor" style="position: absolute; top: 38px; left: 0; right: 0; bottom: 0;"></div>
+                    </div>
+                    <!-- Kanban editor -->
+                    <div id="kanban-editor-container" style="display: none; flex: 1; position: relative; overflow: hidden; background: var(--bg-primary);"></div>
+                </div>
+            </div>
+        </main>
+
+        <!-- TODO панели -->
+        <div id="todo-panels-container" class="todo-panels-container">
+            <!-- Глобальный TODO -->
+            <div id="global-todo-panel" class="todo-panel collapsed">
+                <button class="todo-toggle-btn" onclick="toggleTodoPanel('global')" title="Глобальный TODO">
+                    <span class="todo-arrow">◀</span>
+                </button>
+                <div class="todo-panel-content">
+                    <div class="todo-header">
+                        <h3>📋 Глобальный TODO</h3>
+                    </div>
+                    <div class="todo-list" id="global-todo-list">
+                        <!-- Список задач будет здесь -->
+                    </div>
+                    <div class="todo-form">
+                        <input type="text" id="global-todo-input" placeholder="Добавить задачу..." class="todo-input" autocomplete="off">
+                        <button class="todo-add-btn" onclick="addTodo('global')" title="Добавить">➕</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Локальный TODO для заметки -->
+            <div id="note-todo-panel" class="todo-panel collapsed">
+                <button class="todo-toggle-btn" onclick="toggleTodoPanel('note')" title="TODO заметки">
+                    <span class="todo-arrow">◀</span>
+                </button>
+                <div class="todo-panel-content">
+                    <div class="todo-header">
+                        <h3>📝 TODO заметки</h3>
+                    </div>
+                    <div class="todo-list" id="note-todo-list">
+                        <!-- Список задач будет здесь -->
+                    </div>
+                    <div class="todo-form">
+                        <input type="text" id="note-todo-input" placeholder="Добавить задачу..." class="todo-input" autocomplete="off">
+                        <button class="todo-add-btn" onclick="addTodo('note')" title="Добавить">➕</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно для создания заметки -->
+    <div id="new-note-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <h3>Создать новую заметку</h3>
+            <input type="text" id="new-note-title" placeholder="Название заметки..." autocomplete="off">
+            <div style="margin: 1rem 0;">
+                <label style="display: block; margin-bottom: 0.5rem; color: var(--text-secondary);">Тип заметки:</label>
+                <select id="new-note-type" style="width: 100%; padding: 0.5rem; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 6px; color: var(--text-primary);">
+                    <option value="text">📝 Текст (Markdown)</option>
+                    <option value="canvas">🎨 Canvas (Рисование)</option>
+                    <option value="kanban">📋 Kanban (Доска задач)</option>
+                </select>
+            </div>
+            <div class="modal-buttons">
+                <button id="create-note-btn" class="btn-primary">Создать</button>
+                <button id="cancel-note-btn" class="btn-secondary">Отмена</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно для управления словарем -->
+    <div id="dictionary-modal" class="modal" style="display: none;">
+        <div class="modal-content modal-large">
+            <h3>📖 Словарь фраз</h3>
+            <div class="dictionary-container">
+                <div class="dictionary-form">
+                    <input type="text" id="dict-phrase-input" placeholder="Фраза..." autocomplete="off">
+                    <textarea id="dict-value-input" placeholder="Значение..." rows="3"></textarea>
+                    <div class="modal-buttons">
+                        <button id="add-phrase-btn" class="btn-primary">Добавить/Обновить</button>
+                        <button id="close-dict-btn" class="btn-secondary">Закрыть</button>
+                    </div>
+                </div>
+                <div class="dictionary-list-container">
+                    <h4>Все фразы:</h4>
+                    <div id="dictionary-list" class="dictionary-list">
+                        <!-- Список фраз будет здесь -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно для просмотра значения фразы -->
+    <div id="phrase-viewer-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <h3 id="phrase-viewer-title">Фраза</h3>
+            <div id="phrase-viewer-content" class="phrase-viewer-content"></div>
+            <div class="modal-buttons">
+                <button id="close-phrase-viewer-btn" class="btn-secondary">Закрыть</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно для смены пароля -->
+    <div id="change-password-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <h3>🔐 Смена пароля</h3>
+            <input type="password" id="change-password-old" placeholder="Текущий пароль" autocomplete="off">
+            <input type="password" id="change-password-new" placeholder="Новый пароль" autocomplete="off">
+            <input type="password" id="change-password-confirm" placeholder="Подтвердите новый пароль" autocomplete="off">
+            <div id="change-password-error" class="error-message"></div>
+            <div class="modal-buttons">
+                <button id="change-password-submit-btn" class="btn-primary">Изменить пароль</button>
+                <button id="change-password-cancel-btn" class="btn-secondary">Отмена</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно настроек -->
+    <div id="settings-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <h3>⚙️ Настройки</h3>
+            <div style="display: flex; flex-direction: column; gap: 1rem;">
+                <button id="change-password-menu-btn" class="btn-secondary" style="width: 100%; justify-content: flex-start; text-align: left;">
+                    🔐 Сменить пароль
+                </button>
+            </div>
+            <div class="modal-buttons" style="margin-top: 1.5rem;">
+                <button id="close-settings-btn" class="btn-secondary">Закрыть</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно для восстановления заметки -->
+    <div id="recover-note-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <h3>🔓 Восстановление доступа к заметке</h3>
+            <p id="recover-note-message" class="login-subtitle"></p>
+            <input type="password" id="recover-password-input" placeholder="Введите старый пароль..." autocomplete="off">
+            <div class="modal-buttons">
+                <button id="recover-note-btn" class="btn-primary">Восстановить</button>
+                <button id="cancel-recover-btn" class="btn-secondary">Отмена</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast уведомления -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Скрипты -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+    <script src="{{ url_for('static', filename='js/canvas-editor.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/kanban-editor.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
+
